@@ -4,11 +4,8 @@
 # Wrangler reads this file automatically when running `wrangler dev` or
 # `next dev` (via the OpenNext dev hook in next.config.ts).
 
-# Supabase: project URL + anon (public) key.
-# Get these from https://supabase.com/dashboard/project/<your-project>/settings/api
-SUPABASE_URL="https://<your-project-ref>.supabase.co"
-SUPABASE_ANON_KEY="<your-anon-key>"
-
-# Used only by db/seed.ts and the cron worker. Service role bypasses RLS.
-# Keep this OUT of any client-shipped code.
-SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
+# Supabase → Project Settings → API Keys
+# Publishable key → SUPABASE_ANON_KEY | Secret key → SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_ANON_KEY=<publishable-key-or-legacy-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<secret-key-or-legacy-service-role-key>
