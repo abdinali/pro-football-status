@@ -1,0 +1,17 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "pro-football-status",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-05-16",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS",
+	},
+	"observability": {
+		"enabled": true,
+	},
+	// Bindings (Supabase service role key, etc.) are added via Wrangler secrets:
+	//   npx wrangler secret put SUPABASE_URL
+	//   npx wrangler secret put SUPABASE_ANON_KEY
+}

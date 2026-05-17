@@ -1,0 +1,14 @@
+# Copy this file to `.dev.vars` and fill in real values for local development.
+# `.dev.vars` is gitignored; never commit real secrets.
+#
+# Wrangler reads this file automatically when running `wrangler dev` or
+# `next dev` (via the OpenNext dev hook in next.config.ts).
+
+# Supabase: project URL + anon (public) key.
+# Get these from https://supabase.com/dashboard/project/<your-project>/settings/api
+SUPABASE_URL="https://<your-project-ref>.supabase.co"
+SUPABASE_ANON_KEY="<your-anon-key>"
+
+# Used only by db/seed.ts and the cron worker. Service role bypasses RLS.
+# Keep this OUT of any client-shipped code.
+SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"

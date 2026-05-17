@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pro Football Status
 
-## Getting Started
+NFL playoff scenario simulator and analytics hub. Pick the winner of every remaining regular-season game and watch the playoff seeds (and tiebreakers) update live. Share scenarios with anyone via URL.
 
-First, run the development server:
+> v1 scope: real standings + scenario simulator + tiebreaker engine + shareable URLs. No accounts, no live scores, no analytics dashboards yet.
+
+## Stack
+
+- **Web app:** Next.js 16 (App Router, TypeScript, Tailwind v4)
+- **Hosting:** Cloudflare Workers via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)
+- **Database:** Supabase (Postgres) — `teams`, `seasons`, `games`
+- **Object storage:** Cloudflare R2 — raw nflverse CSV/Parquet snapshots (audit trail)
+- **Data source:** [nflverse-data](https://github.com/nflverse/nflverse-data) GitHub releases
+- **Cron worker:** separate Wrangler-deployed Worker that pulls schedules every 6h
+- **Tests:** Vitest
+
+## Local development
 
 ```bash
+# 1. Install deps
+npm install
+
+# 2. Copy local env file and fill in Supabase keys
+cp .dev.vars.example .dev.vars
+
+# 3. Run the Next.js dev server (Cloudflare bindings are wired in via next.config.ts)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To preview the actual Cloudflare Worker build (closer to production):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run preview
+```
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# First time only: create Cloudflare account, login, set Wrangler secrets
+npx wrangler login
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_ANON_KEY
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Build + deploy (the Next.js app)
+npm run deploy
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The cron worker that ingests nflverse data deploys separately from `workers/cron-nflverse`.
 
-## Deploy on Vercel
+## Repo layout
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/             Next.js App Router pages
+components/      React UI (Picker, Standings)
+lib/
+  tiebreakers/   Pure-TS NFL tiebreaker engine (works in browser + server)
+  scenario/      base64url codec for picks-in-URL
+  nflverse/      CSV fetcher + zod schemas
+  supabase/      thin server/browser clients
+  nfl/           constants (divisions, conferences, current season)
+workers/
+  cron-nflverse/ scheduled Worker for nflverse ingest
+db/
+  schema.sql     source of truth for the Supabase schema
+  migrations/    Supabase CLI migrations
+  seed.ts        seeds teams + current season
+tests/           Vitest specs
+notes/           local scratch (gitignored): build guides, todos
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Methodology in one paragraph
+
+Standings are computed from the `games` table by a pure TypeScript engine that implements the NFL's published tiebreaker ladders for divisions and wild cards (head-to-head → division/conference record → common games → strength of victory → strength of schedule → ranking-in-points → net points → coin flip). The same engine runs server-side for `/standings` and client-side on every keystroke in `/sim`. For v1, Strength of Victory and Strength of Schedule use **real games only** — your simulated picks don't recursively change opponents' SoV/SoS. See `/methodology` in the deployed app for the long version.
